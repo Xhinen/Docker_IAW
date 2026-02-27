@@ -231,11 +231,74 @@ El sistema se organiza en tres servicios independientes desplegados como contene
 
 1. **catalog-service**: API REST para productos. Utiliza PostgreSQL para almacenamiento.
 2. **user-service**: ejemplo de servicio de usuarios; podría ampliarse posteriormente.
-3. **frontend**: aplicación React que consume las APIs y presenta la UI reactiva.
-4. **gateway (nginx)**: actúa como API gateway / reverse proxy, enrutando `/api/catalog` a `catalog-service`, `/api/users` a `user-service` y sirviendo la SPA del frontend.
-5. **db (PostgreSQL)**: base de datos compartida por el catálogo.
+3. **cms-service**: instancia Strapi que puede desplegarse localmente (conexión configurable a PostgreSQL mediante `DATABASE_URL`) o en Vercel, sirviendo contenido editable (artículos, etc.).
+4. **frontend**: aplicación React que consume las APIs y presenta la UI reactiva. Incluye varias secciones:
+   - **Página de inicio** con diseño minimalista inspirado en Zara.
+   - **Catálogo interactivo** con cuadrícula de productos y filtros de búsqueda.
+   - **Panel de administrador** que muestra el estado simulado de Nginx, peticiones y copias de seguridad.
+   - **Visualización del flujo HTTP** desde el navegador hasta la base de datos con indicadores de estado.
+   - **Gestión de certificados SSL/TLS** con lista de certificados y acciones de renovación.
+5. **gateway (nginx)**: actúa como API gateway / reverse proxy, enrutando `/api/catalog` a `catalog-service`, `/api/users` a `user-service`, `/api/cms` a `cms-service` y sirviendo la SPA del frontend.
+6. **db (PostgreSQL)**: base de datos compartida por el catálogo.
 
 Esta organización permite escalar y mantener cada componente por separado, facilitando actualizaciones y despliegues.
+
+### Despliegue del CMS en Vercel
+
+El servicio `cms` basado en Strapi puede desarrollarse localmente dentro de `services/cms` o desplegarse sobre Vercel como proyecto independiente. Localmente, la configuración predeterminada usa la variable `DATABASE_URL` para conectar a PostgreSQL; si no está definida se usa SQLite en `./.tmp/data.db`.
+
+**Roles y autenticación**
+
+Strapi incluye un sistema de **roles y permisos** dentro de su panel administrativo (Users & Permissions Plugin). Para habilitarlo:
+
+1. Accede al panel de administración tras iniciar Strapi (`http://localhost:1337/admin` local o en la URL de Vercel).
+2. Crea un usuario administrador inicial (se solicita la primera vez).
+3. En Settings → Roles & Permissions define los diferentes roles (público, autenticado, editor, etc.) y ajusta qué colecciones pueden leer/escribir.
+4. Habilita la autenticación por JWT; los endpoints públicos (`/api/<content>`) requieren configurar si se permite acceso anónimo.
+
+Para integrar el CMS con la base de datos local, basta con establecer en `docker-compose.yml` la variable:
+
+```yaml
+cms:
+  environment:
+    - DATABASE_URL=postgres://postgres:example@db:5432/catalog
+```
+
+y confirmar `config/database.js` (ya incluido) apuntando a ese mismo URL. El contenedor Strapi compartirá el mismo servicio PostgreSQL que el catálogo, aunque puede usar un esquema distinto para aislar los datos.
+
+El resto de pasos para despliegue en Vercel se mantienen como antes:
+
+1. Crea un repositorio con `services/cms` y configúralo en Vercel.
+2. Define las variables de entorno necesarias en el dashboard de Vercel.
+3. Vercel proporcionará una URL pública donde la API de Strapi estará disponible en el puerto 1337.
+4. Ajusta el frontend o el gateway para consumir el endpoint público del CMS (`/api/cms` o ruta directa).
+
+Al alojar el CMS en Vercel obtienes:
+
+- Un entorno gestionado con despliegues automáticos desde la rama principal.
+- Posibilidad de escalar el CMS sin tocar la infraestructura local.
+
+Puedes seguir gestionando los demás microservicios mediante Docker o migrarlos posteriormente a un orquestador como Kubernetes si crece la demanda.
+
+### Despliegue en Kubernetes
+
+Se han añadido manifiestos de ejemplo en la carpeta `k8s/`:
+
+- `deployments.yml` contiene los `Deployment` para cada servicio y la base de datos.
+- `services.yml` define los `Service` de Kubernetes que exponen los puertos internos.
+
+Para desplegar en un clúster válido (minikube, kind, EKS, GKE, etc.):
+
+```bash
+kubectl apply -f k8s/deployments.yml
+kubectl apply -f k8s/services.yml
+```
+
+Los contenedores deben haberse construido y etiquetado localmente con los nombres usados en los manifiestos (`docker_iaw-catalog:latest`, etc.) o bien deben referenciar imágenes almacenadas en un registro accesible (Docker Hub, GitHub Container Registry, etc.).
+
+El servicio `gateway-service` se encargará de recibir el tráfico externo cuando se configure un `Ingress` o un `LoadBalancer` según el proveedor de Kubernetes.
+
+
 
 ---
 

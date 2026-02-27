@@ -10,6 +10,13 @@ services:
   user:
     build: ./services/user
     restart: unless-stopped
+  cms:
+    build: ./services/cms
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgres://postgres:example@db:5432/catalog
+    depends_on:
+      - db
   frontend:
     build: ./services/frontend
     restart: unless-stopped
