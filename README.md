@@ -205,3 +205,32 @@ sequenceDiagram
 
 Este diagrama se puede exportar como imagen o incluir directamente en la memoria del proyecto si la herramienta utilizada soporta Mermaid.
 
+---
+
+## Estructura del proyecto
+
+```
+Docker_IAW/
+├── app/              # aplicación Node.js (Express + EJS)
+│   ├── public/       # activos estáticos (CSS)
+│   ├── views/        # plantillas EJS
+│   ├── package.json
+│   └── Dockerfile
+├── nginx/            # contenedor Nginx con configuración personalizada
+│   ├── default.conf
+│   └── Dockerfile
+├── docker-compose.yml
+└── README.md         # documentación y análisis
+```
+
+## Levantar el entorno con Docker
+
+1. Construir las imágenes y ejecutar los contenedores:
+   ```bash
+   docker-compose up --build
+   ```
+2. Acceder a `http://localhost/` en el navegador para ver el catálogo.
+3. Para parar y eliminar contenedores: `docker-compose down`.
+
+La aplicación de catálogo escucha internamente en el puerto 3000 y Nginx la expone en el puerto 80.
+

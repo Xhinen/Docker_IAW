@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Catálogo</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1>Catálogo de productos</h1>
+  <ul>
+    <% products.forEach(p => { %>
+      <li><a href="/product/<%= p.id %>"><%= p.name %></a> - $<%= p.price %></li>
+    <% }) %>
+  </ul>
+</body>
+</html>

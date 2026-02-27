@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  app:
+    build: ./app
+    restart: unless-stopped
+    ports:
+      - "3000"
+    environment:
+      - NODE_ENV=production
+  web:
+    build: ./nginx
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+    restart: unless-stopped
