@@ -211,17 +211,33 @@ Este diagrama se puede exportar como imagen o incluir directamente en la memoria
 
 ```
 Docker_IAW/
-├── app/              # aplicación Node.js (Express + EJS)
-│   ├── public/       # activos estáticos (CSS)
-│   ├── views/        # plantillas EJS
-│   ├── package.json
-│   └── Dockerfile
-├── nginx/            # contenedor Nginx con configuración personalizada
+├── services/         # microservicios y frontend
+│   ├── catalog/      # servicio catálogo (Node + Postgres)
+│   │   ├── index.js
+│   │   ├── package.json
+│   │   └── Dockerfile
+│   ├── user/         # servicio usuarios (simulado)
+│   └── frontend/     # aplicación React compilada en contenedor nginx
+├── nginx/            # gateway Nginx para enrutar APIs y frontend
 │   ├── default.conf
 │   └── Dockerfile
 ├── docker-compose.yml
 └── README.md         # documentación y análisis
 ```
+
+### Arquitectura basada en microservicios
+
+El sistema se organiza en tres servicios independientes desplegados como contenedores:
+
+1. **catalog-service**: API REST para productos. Utiliza PostgreSQL para almacenamiento.
+2. **user-service**: ejemplo de servicio de usuarios; podría ampliarse posteriormente.
+3. **frontend**: aplicación React que consume las APIs y presenta la UI reactiva.
+4. **gateway (nginx)**: actúa como API gateway / reverse proxy, enrutando `/api/catalog` a `catalog-service`, `/api/users` a `user-service` y sirviendo la SPA del frontend.
+5. **db (PostgreSQL)**: base de datos compartida por el catálogo.
+
+Esta organización permite escalar y mantener cada componente por separado, facilitando actualizaciones y despliegues.
+
+---
 
 ## Levantar el entorno con Docker
 
@@ -229,8 +245,13 @@ Docker_IAW/
    ```bash
    docker-compose up --build
    ```
-2. Acceder a `http://localhost/` en el navegador para ver el catálogo.
-3. Para parar y eliminar contenedores: `docker-compose down`.
+2. Esperar a que los servicios se inicialicen (el catalog-service crea la tabla y los datos).
+3. Acceder a `http://localhost/` en el navegador para ver la aplicación React.
+   - La SPA solicitará `/api/catalog/products` al gateway para recuperar productos.
+4. Otros endpoints disponibles para pruebas:
+   - `http://localhost/api/catalog/products`
+   - `http://localhost/api/users`
+5. Para parar y eliminar contenedores: `docker-compose down`.
 
-La aplicación de catálogo escucha internamente en el puerto 3000 y Nginx la expone en el puerto 80.
+Cada servicio corre en su propio puerto interno (catalog 4000, user 5000, frontend 80) y el gateway los orquesta en el puerto público 80.
 

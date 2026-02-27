@@ -1,16 +1,34 @@
 version: '3.8'
 services:
-  app:
-    build: ./app
+  catalog:
+    build: ./services/catalog
     restart: unless-stopped
-    ports:
-      - "3000"
     environment:
-      - NODE_ENV=production
-  web:
+      - DATABASE_URL=postgres://postgres:example@db:5432/catalog
+    depends_on:
+      - db
+  user:
+    build: ./services/user
+    restart: unless-stopped
+  frontend:
+    build: ./services/frontend
+    restart: unless-stopped
+  gateway:
     build: ./nginx
     depends_on:
-      - app
+      - catalog
+      - user
+      - frontend
     ports:
       - "80:80"
     restart: unless-stopped
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: catalog
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:
