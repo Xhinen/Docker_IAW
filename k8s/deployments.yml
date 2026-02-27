@@ -87,6 +87,55 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: auth-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+      - name: auth
+        image: docker_iaw-auth:latest
+        ports:
+        - containerPort: 6000
+        env:
+        - name: DATABASE_URL
+          value: "postgres://postgres:example@db:5432/catalog"
+        - name: JWT_SECRET
+          value: "supersecret"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order
+  template:
+    metadata:
+      labels:
+        app: order
+    spec:
+      containers:
+      - name: order
+        image: docker_iaw-order:latest
+        ports:
+        - containerPort: 7000
+        env:
+        - name: DATABASE_URL
+          value: "postgres://postgres:example@db:5432/catalog"
+---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
   name: gateway-deployment
 spec:
   replicas: 1

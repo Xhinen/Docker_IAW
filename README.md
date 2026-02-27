@@ -233,11 +233,12 @@ El sistema se organiza en tres servicios independientes desplegados como contene
 2. **user-service**: ejemplo de servicio de usuarios; podría ampliarse posteriormente.
 3. **cms-service**: instancia Strapi que puede desplegarse localmente (conexión configurable a PostgreSQL mediante `DATABASE_URL`) o en Vercel, sirviendo contenido editable (artículos, etc.).
 4. **frontend**: aplicación React que consume las APIs y presenta la UI reactiva. Incluye varias secciones:
-   - **Página de inicio** con diseño minimalista inspirado en Zara.
-   - **Catálogo interactivo** con cuadrícula de productos y filtros de búsqueda.
+   - **Página de inicio** con diseño minimalista inspirado en Zara; ahora utiliza Bootstrap para estilos y respon- sividad.
+   - **Catálogo interactivo** con cuadrícula de productos y filtros de búsqueda. Puede consumir datos reales desde el catálogo o desde el CMS si se extiende.
    - **Panel de administrador** que muestra el estado simulado de Nginx, peticiones y copias de seguridad.
    - **Visualización del flujo HTTP** desde el navegador hasta la base de datos con indicadores de estado.
    - **Gestión de certificados SSL/TLS** con lista de certificados y acciones de renovación.
+   - **Autenticación y pedidos**: se ha añadido soporte para iniciar sesión (`/api/auth`) y enviar pedidos (`/api/orders`). El servicio de autenticación crea usuarios en la misma base de datos PostgreSQL y emite JWT, usados por otros microservicios o el frontend.
 5. **gateway (nginx)**: actúa como API gateway / reverse proxy, enrutando `/api/catalog` a `catalog-service`, `/api/users` a `user-service`, `/api/cms` a `cms-service` y sirviendo la SPA del frontend.
 6. **db (PostgreSQL)**: base de datos compartida por el catálogo.
 
@@ -279,6 +280,16 @@ Al alojar el CMS en Vercel obtienes:
 - Posibilidad de escalar el CMS sin tocar la infraestructura local.
 
 Puedes seguir gestionando los demás microservicios mediante Docker o migrarlos posteriormente a un orquestador como Kubernetes si crece la demanda.
+
+#### Mejoras adicionales potenciales
+
+- **Colas de mensajes**: integrar RabbitMQ o Kafka para desacoplar servicios (por ejemplo, creación de pedidos o notificaciones). Se podría añadir un microservicio `queue` que publique/consuma mensajes.
+- **Caching**: añadir Redis o Memcached para cachear respuestas frecuentes del catálogo o sesiones de usuario.
+- **Monitorización**: utilizar Prometheus/Grafana para métricas de CPU, memoria, latencias y mostrar dashboards; incluir `node_exporter` o `cAdvisor` en contenedores.
+- **Logs centralizados**: enviar logs a Elasticsearch/Logstash/Graylog para análisis.
+- **Seguridad**: Habilitar mutual TLS entre servicios, políticas de red (NetworkPolicy en Kubernetes).
+
+Todas estas mejoras encajarían en la arquitectura existente sin cambios drásticos, simplemente añadiendo nuevos componentes y actualizando la configuración del gateway y el orquestador.
 
 ### Despliegue en Kubernetes
 
