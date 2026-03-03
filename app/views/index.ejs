@@ -7,6 +7,10 @@
 </head>
 <body>
   <h1>Catálogo de productos</h1>
+  <nav>
+    <a href="/login">Login</a> |
+    <a href="/register">Registro</a>
+  </nav>
   <ul>
     <% products.forEach(p => { %>
       <li><a href="/product/<%= p.id %>"><%= p.name %></a> - $<%= p.price %></li>
