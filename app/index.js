@@ -45,6 +45,21 @@ app.post('/register', express.urlencoded({ extended: true }), (req, res) => {
   res.send('Registro completado');
 });
 
+// login page
+app.get('/login', (req, res) => {
+  res.render('login');
+});
+
+// handle login
+app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
+  const { email, password } = req.body;
+  const user = users.find(u => u.email === email && u.password === password);
+  if (!user) {
+    return res.status(401).send('Credenciales inválidas');
+  }
+  res.send('Acceso concedido');
+});
+
 app.listen(port, () => {
   console.log(`Catalog app listening on port ${port}`);
 });
