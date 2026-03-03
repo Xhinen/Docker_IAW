@@ -27,6 +27,24 @@ app.get('/product/:id', (req, res) => {
   res.render('product', { product });
 });
 
+// registration page
+app.get('/register', (req, res) => {
+  res.render('register');
+});
+
+// handle registration submission
+const users = [];
+app.post('/register', express.urlencoded({ extended: true }), (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).send('Faltan datos');
+  }
+  // simple in-memory user store (never use in production)
+  users.push({ email, password });
+  console.log('Nuevo usuario registrado', email);
+  res.send('Registro completado');
+});
+
 app.listen(port, () => {
   console.log(`Catalog app listening on port ${port}`);
 });
